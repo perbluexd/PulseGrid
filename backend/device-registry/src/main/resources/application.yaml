@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: device-registry
+  datasource:
+    url: jdbc:postgresql://localhost:5440/device_registry_db
+    username: device_registry_user
+    password: device_registry_pass
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+server:
+  port: 8090
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-placeholder-never-use-in-production}
+    access-token-expiration-minutes: 30
+  kafka:
+    device-registry-events-topic: device-registry-events

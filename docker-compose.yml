@@ -1,0 +1,16 @@
+services:
+  device-registry-db:
+    image: postgres:16-alpine
+    container_name: pulsegrid-device-registry-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: device_registry_db
+      POSTGRES_USER: device_registry_user
+      POSTGRES_PASSWORD: device_registry_pass
+    ports:
+      - "5440:5432"
+    volumes:
+      - device_registry_db_data:/var/lib/postgresql/data
+
+volumes:
+  device_registry_db_data:

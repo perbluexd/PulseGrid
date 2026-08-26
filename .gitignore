@@ -1,0 +1,17 @@
+# Backend (Maven)
+target/
+
+# IDE
+.idea/
+
+# Herramientas IA (config/caché local)
+.claude/
+.cursor/
+.codex/
+.gemini/
+.agents/
+.opencode/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
