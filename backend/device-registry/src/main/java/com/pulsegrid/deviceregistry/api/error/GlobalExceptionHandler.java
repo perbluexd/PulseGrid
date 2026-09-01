@@ -6,14 +6,33 @@ import com.pulsegrid.deviceregistry.domain.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex){
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(FieldError::getDefaultMessage)
+                .collect(Collectors.joining(", "));
+        ErrorResponse body = new ErrorResponse("ERR-000", message, HttpStatus.BAD_REQUEST.value(), Instant.now());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex){
+        ErrorResponse body = new ErrorResponse("ERR-000", ex.getMessage(), HttpStatus.BAD_REQUEST.value(), Instant.now());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
 
     @ExceptionHandler(ApplicationException.class)
     public ResponseEntity<ErrorResponse> handleApplicationException(ApplicationException ex){
@@ -42,8 +61,8 @@ public class GlobalExceptionHandler {
     private HttpStatus mapToStatus(ErrorCode errorCode){
         return switch (errorCode) {
             case INVALID_EMAIL_FORMAT -> HttpStatus.BAD_REQUEST;
-            case INVALID_CREDENTIALS, INVALID_API_KEY -> HttpStatus.UNAUTHORIZED;
-            case DASHBOARD_USER_INACTIVE, DEVICE_NOT_ACTIVE -> HttpStatus.FORBIDDEN;
+            case INVALID_CREDENTIALS, INVALID_API_KEY, INVALID_OR_EXPIRED_TOKEN -> HttpStatus.UNAUTHORIZED;
+            case DASHBOARD_USER_INACTIVE, DEVICE_NOT_ACTIVE, INSUFFICIENT_PERMISSIONS -> HttpStatus.FORBIDDEN;
             case DEVICE_NOT_FOUND, DEVICE_GROUP_NOT_FOUND, ACTIVE_API_KEY_NOT_FOUND, DEVICE_NOT_IN_GROUP ->
                     HttpStatus.NOT_FOUND;
             case DEVICE_ALREADY_IN_GROUP, DEVICE_GROUP_NOT_EMPTY -> HttpStatus.CONFLICT;

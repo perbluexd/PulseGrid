@@ -11,7 +11,9 @@ public enum ErrorCode {
     DEVICE_ALREADY_IN_GROUP("ERR-008", "El dispositivo ya pertenece a este grupo"),
     ACTIVE_API_KEY_NOT_FOUND("ERR-009", "El dispositivo no tiene una API key activa para rotar"),
     DEVICE_NOT_IN_GROUP("ERR-010", "El dispositivo no pertenece a este grupo"),
-    DEVICE_GROUP_NOT_EMPTY("ERR-011", "El grupo todavía tiene dispositivos asociados, no se puede borrar");
+    DEVICE_GROUP_NOT_EMPTY("ERR-011", "El grupo todavía tiene dispositivos asociados, no se puede borrar"),
+    INVALID_OR_EXPIRED_TOKEN("ERR-012", "El token de acceso es inválido o expiró"),
+    INSUFFICIENT_PERMISSIONS("ERR-013", "No tenés permisos para realizar esta acción");
 
     private final String code;
     private final String defaultMessage;

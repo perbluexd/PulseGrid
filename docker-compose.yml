@@ -12,5 +12,17 @@ services:
     volumes:
       - device_registry_db_data:/var/lib/postgresql/data
 
+  device-registry:
+    build:
+      context: ./backend/device-registry
+    container_name: pulsegrid-device-registry
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://device-registry-db:5432/device_registry_db
+    depends_on:
+      - device-registry-db
+
 volumes:
   device_registry_db_data:

@@ -13,6 +13,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  flyway:
+    enabled: true
   kafka:
     bootstrap-servers: localhost:9092
     producer:
@@ -26,5 +28,7 @@ app:
   jwt:
     secret: ${JWT_SECRET:dev-only-placeholder-never-use-in-production}
     access-token-expiration-minutes: 30
+  internal:
+    service-token: ${INTERNAL_SERVICE_TOKEN:dev-only-internal-placeholder-never-use-in-production}
   kafka:
     device-registry-events-topic: device-registry-events
