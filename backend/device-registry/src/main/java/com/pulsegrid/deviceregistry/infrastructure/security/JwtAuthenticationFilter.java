@@ -37,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith(BEARER_PREFIX)) {
             String token = header.substring(BEARER_PREFIX.length());
             try {
-                var claims = Jwts.parser()
+                var claims = Jwts.parser()// var es igual Claims
                         .verifyWith(jwtKeyProvider.getKey())
                         .build()
                         .parseSignedClaims(token)
@@ -46,8 +46,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String userId = claims.getSubject();
                 String role = claims.get("role", String.class);
 
-                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
-                var authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));// var significa List<SimpleGrantedAuthority>
+                var authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);// var puede ser Authentication que es la interfaz
+                // o ser directamente UsernamePasswordAuthenticationToken
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (JwtException | IllegalArgumentException ex) {
                 SecurityContextHolder.clearContext();
