@@ -23,6 +23,12 @@ public class SecurityConfig {
             "/api/v1/auth/login"
     };
 
+    private static final String[] DOCS_ENDPOINTS = {
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html"
+    };
+
     private static final String[] INTERNAL_ENDPOINTS = {
             "/api/v1/internal/**"
     };
@@ -44,6 +50,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(DOCS_ENDPOINTS).permitAll()
                         .requestMatchers(INTERNAL_ENDPOINTS).hasAuthority("ROLE_INTERNAL_SERVICE")
                         .requestMatchers(HttpMethod.GET, DEVICE_MANAGEMENT_ENDPOINTS)
                         .hasAnyAuthority("ROLE_ADMIN", "ROLE_VIEWER")
