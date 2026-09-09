@@ -5,6 +5,7 @@ import com.pulsegrid.deviceregistry.application.error.ActiveApiKeyNotFoundExcept
 import com.pulsegrid.deviceregistry.application.error.DeviceNotFoundException;
 import com.pulsegrid.deviceregistry.application.port.out.ApiKeyGeneratorPort;
 import com.pulsegrid.deviceregistry.application.port.out.ApiKeyRepositoryPort;
+import com.pulsegrid.deviceregistry.application.port.out.DeviceRegistryEventPublisherPort;
 import com.pulsegrid.deviceregistry.application.port.out.DeviceRepositoryPort;
 import com.pulsegrid.deviceregistry.application.port.result.RotateDeviceApiKeyResult;
 import com.pulsegrid.deviceregistry.domain.model.ApiKey;
@@ -42,6 +43,9 @@ class RotateDeviceApiKeyServiceTest {
     @Mock
     private ApiKeyGeneratorPort apiKeyGeneratorPort;
 
+    @Mock
+    private DeviceRegistryEventPublisherPort deviceRegistryEventPublisherPort;
+
     @InjectMocks
     private RotateDeviceApiKeyService rotateDeviceApiKeyService;
 
@@ -65,6 +69,7 @@ class RotateDeviceApiKeyServiceTest {
         assertThat(result.newApiKey()).isEqualTo("new-raw-key");
         assertThat(currentKey.getStatus()).isEqualTo(ApiKeyStatus.REVOKED);
         verify(apiKeyRepositoryPort, times(2)).save(any());
+        verify(deviceRegistryEventPublisherPort).publishApiKeyRotated(any());
     }
 
     @Test
@@ -76,6 +81,7 @@ class RotateDeviceApiKeyServiceTest {
                 .isInstanceOf(DeviceNotFoundException.class);
 
         verify(apiKeyRepositoryPort, never()).save(any());
+        verify(deviceRegistryEventPublisherPort, never()).publishApiKeyRotated(any());
     }
 
     @Test
@@ -91,5 +97,6 @@ class RotateDeviceApiKeyServiceTest {
                 .isInstanceOf(ActiveApiKeyNotFoundException.class);
 
         verify(apiKeyRepositoryPort, never()).save(any());
+        verify(deviceRegistryEventPublisherPort, never()).publishApiKeyRotated(any());
     }
 }

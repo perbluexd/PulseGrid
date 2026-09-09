@@ -29,6 +29,15 @@ public class SecurityConfig {
             "/swagger-ui.html"
     };
 
+    private static final String[] ACTUATOR_PUBLIC_ENDPOINTS = {
+            "/actuator/health",
+            "/actuator/health/**"
+    };
+
+    private static final String[] ACTUATOR_RESTRICTED_ENDPOINTS = {
+            "/actuator/**"
+    };
+
     private static final String[] INTERNAL_ENDPOINTS = {
             "/api/v1/internal/**"
     };
@@ -51,6 +60,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(DOCS_ENDPOINTS).permitAll()
+                        .requestMatchers(ACTUATOR_PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(ACTUATOR_RESTRICTED_ENDPOINTS).hasAuthority("ROLE_ADMIN")
                         .requestMatchers(INTERNAL_ENDPOINTS).hasAuthority("ROLE_INTERNAL_SERVICE")
                         .requestMatchers(HttpMethod.GET, DEVICE_MANAGEMENT_ENDPOINTS)
                         .hasAnyAuthority("ROLE_ADMIN", "ROLE_VIEWER")
