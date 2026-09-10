@@ -1,6 +1,7 @@
 package com.pulsegrid.deviceregistry.infrastructure.messaging;
 
 import com.pulsegrid.deviceregistry.application.event.ApiKeyRotatedEvent;
+import com.pulsegrid.deviceregistry.application.event.DeviceGroupMembershipChangedEvent;
 import com.pulsegrid.deviceregistry.application.port.out.DeviceRegistryEventPublisherPort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -20,6 +21,11 @@ public class DeviceRegistryEventPublisherAdapter implements DeviceRegistryEventP
 
     @Override
     public void publishApiKeyRotated(ApiKeyRotatedEvent event) {
+        kafkaTemplate.send(topic, event.deviceId().toString(), event);
+    }
+
+    @Override
+    public void publishMembershipChanged(DeviceGroupMembershipChangedEvent event) {
         kafkaTemplate.send(topic, event.deviceId().toString(), event);
     }
 }

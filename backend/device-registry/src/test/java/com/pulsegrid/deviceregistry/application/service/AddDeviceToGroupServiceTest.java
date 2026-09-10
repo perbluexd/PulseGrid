@@ -6,6 +6,7 @@ import com.pulsegrid.deviceregistry.application.error.DeviceGroupNotFoundExcepti
 import com.pulsegrid.deviceregistry.application.error.DeviceNotFoundException;
 import com.pulsegrid.deviceregistry.application.port.out.DeviceGroupMembershipRepositoryPort;
 import com.pulsegrid.deviceregistry.application.port.out.DeviceGroupRepositoryPort;
+import com.pulsegrid.deviceregistry.application.port.out.DeviceRegistryEventPublisherPort;
 import com.pulsegrid.deviceregistry.application.port.out.DeviceRepositoryPort;
 import com.pulsegrid.deviceregistry.application.port.result.AddDeviceToGroupResult;
 import com.pulsegrid.deviceregistry.domain.model.Device;
@@ -41,6 +42,9 @@ class AddDeviceToGroupServiceTest {
     @Mock
     private DeviceGroupMembershipRepositoryPort deviceGroupMembershipRepositoryPort;
 
+    @Mock
+    private DeviceRegistryEventPublisherPort deviceRegistryEventPublisherPort;
+
     @InjectMocks
     private AddDeviceToGroupService addDeviceToGroupService;
 
@@ -61,6 +65,7 @@ class AddDeviceToGroupServiceTest {
         assertThat(result.deviceId()).isEqualTo(deviceId);
         assertThat(result.groupId()).isEqualTo(groupId);
         verify(deviceGroupMembershipRepositoryPort).save(any());
+        verify(deviceRegistryEventPublisherPort).publishMembershipChanged(any());
     }
 
     @Test
@@ -73,6 +78,7 @@ class AddDeviceToGroupServiceTest {
                 .isInstanceOf(DeviceNotFoundException.class);
 
         verify(deviceGroupMembershipRepositoryPort, never()).save(any());
+        verify(deviceRegistryEventPublisherPort, never()).publishMembershipChanged(any());
     }
 
     @Test
@@ -89,6 +95,7 @@ class AddDeviceToGroupServiceTest {
                 .isInstanceOf(DeviceGroupNotFoundException.class);
 
         verify(deviceGroupMembershipRepositoryPort, never()).save(any());
+        verify(deviceRegistryEventPublisherPort, never()).publishMembershipChanged(any());
     }
 
     @Test
@@ -107,5 +114,6 @@ class AddDeviceToGroupServiceTest {
                 .isInstanceOf(DeviceAlreadyInGroupException.class);
 
         verify(deviceGroupMembershipRepositoryPort, never()).save(any());
+        verify(deviceRegistryEventPublisherPort, never()).publishMembershipChanged(any());
     }
 }
