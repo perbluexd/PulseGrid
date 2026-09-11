@@ -1,6 +1,8 @@
 package com.pulsegrid.deviceregistry.infrastructure.messaging;
 
 import com.pulsegrid.deviceregistry.application.event.ApiKeyRotatedEvent;
+import com.pulsegrid.deviceregistry.application.event.DeviceGroupMembershipChangedEvent;
+import com.pulsegrid.deviceregistry.application.event.MembershipChangeType;
 import com.pulsegrid.deviceregistry.infrastructure.messaging.config.KafkaProducerConfig;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -50,6 +52,20 @@ class DeviceRegistryEventPublisherAdapterIT {
         ApiKeyRotatedEvent event = new ApiKeyRotatedEvent(deviceId, UUID.randomUUID(), UUID.randomUUID(), Instant.now());
 
         deviceRegistryEventPublisherAdapter.publishApiKeyRotated(event);
+
+        ConsumerRecord<String, String> record = consumeOneRecord();
+
+        assertThat(record.key()).isEqualTo(deviceId.toString());
+        assertThat(record.value()).contains(deviceId.toString());
+    }
+
+    @Test
+    void shouldPublishMembershipChangedEventToTopicWithDeviceIdAsKey() {
+        UUID deviceId = UUID.randomUUID();
+        UUID groupId = UUID.randomUUID();
+        DeviceGroupMembershipChangedEvent event = new DeviceGroupMembershipChangedEvent(deviceId, groupId, MembershipChangeType.ADDED, Instant.now());
+
+        deviceRegistryEventPublisherAdapter.publishMembershipChanged(event);
 
         ConsumerRecord<String, String> record = consumeOneRecord();
 
