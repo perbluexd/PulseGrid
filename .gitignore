@@ -15,3 +15,6 @@ target/
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+# Kubernetes (manifiestos con secretos reales)
+**/k8s/secret.yaml

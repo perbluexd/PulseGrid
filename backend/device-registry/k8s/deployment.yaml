@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: device-registry
+  labels:
+    app: device-registry
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: device-registry
+  template:
+    metadata:
+      labels:
+        app: device-registry
+    spec:
+      containers:
+        - name: device-registry
+          image: device-registry:latest
+          ports:
+            - containerPort: 8090
+          env:
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: device-registry-config
+                  key: SPRING_DATASOURCE_URL
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: device-registry-config
+                  key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: device-registry-secret
+                  key: SPRING_DATASOURCE_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: device-registry-secret
+                  key: SPRING_DATASOURCE_PASSWORD
