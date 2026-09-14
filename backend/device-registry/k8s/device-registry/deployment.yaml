@@ -17,6 +17,7 @@ spec:
       containers:
         - name: device-registry
           image: device-registry:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8090
           env:

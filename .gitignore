@@ -17,4 +17,4 @@ target/
 Thumbs.db
 
 # Kubernetes (manifiestos con secretos reales)
-**/k8s/secret.yaml
+**/k8s/**/secret.yaml
