@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: ingestion-gateway
+
+server:
+  port: 8091
