@@ -1,6 +1,16 @@
 spring:
   application:
     name: ingestion-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 server:
   port: 8091
+
+app:
+  device-registry:
+    base-url: ${DEVICE_REGISTRY_BASE_URL:http://localhost:8090}
+  internal:
+    service-token: ${INTERNAL_SERVICE_TOKEN:dev-only-internal-placeholder-never-use-in-production}

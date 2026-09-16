@@ -41,5 +41,12 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
+  redis:
+    image: redis:7-alpine
+    container_name: pulsegrid-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
 volumes:
   device_registry_db_data:
