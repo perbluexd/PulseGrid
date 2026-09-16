@@ -1,10 +1,13 @@
 package com.pulsegrid.ingestiongateway.infrastructure.client;
 
+import com.pulsegrid.ingestiongateway.application.error.DeviceNotActiveException;
+import com.pulsegrid.ingestiongateway.application.error.InvalidApiKeyException;
 import com.pulsegrid.ingestiongateway.application.port.out.DeviceRegistryPort;
 import com.pulsegrid.ingestiongateway.infrastructure.client.dto.ResolveByApiKeyRequest;
 import com.pulsegrid.ingestiongateway.infrastructure.client.dto.ResolveByApiKeyResponse;
 import com.pulsegrid.ingestiongateway.infrastructure.security.InternalServiceTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -28,6 +31,10 @@ public class DeviceRegistryWebClientAdapter implements DeviceRegistryPort {
                 .header(INTERNAL_SERVICE_HEADER, internalServiceTokenProvider.getToken())
                 .bodyValue(new ResolveByApiKeyRequest(apiKey))
                 .retrieve()
+                .onStatus(status -> status.equals(HttpStatus.UNAUTHORIZED),
+                        response -> Mono.error(new InvalidApiKeyException()))
+                .onStatus(status -> status.equals(HttpStatus.FORBIDDEN),
+                        response -> Mono.error(new DeviceNotActiveException()))
                 .bodyToMono(ResolveByApiKeyResponse.class)
                 .map(ResolveByApiKeyResponse::deviceId);
     }
