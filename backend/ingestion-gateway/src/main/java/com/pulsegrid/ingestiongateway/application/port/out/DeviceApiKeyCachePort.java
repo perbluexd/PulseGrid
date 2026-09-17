@@ -8,4 +8,6 @@ public interface DeviceApiKeyCachePort {
     Mono<UUID> get(String apiKey);
 
     Mono<Void> put(String apiKey, UUID deviceId);
+
+    Mono<Void> evict(String apiKeyHash);
 }

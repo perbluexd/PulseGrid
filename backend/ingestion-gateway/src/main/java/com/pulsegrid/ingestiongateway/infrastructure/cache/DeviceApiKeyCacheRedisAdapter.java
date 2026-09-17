@@ -34,8 +34,19 @@ public class DeviceApiKeyCacheRedisAdapter implements DeviceApiKeyCachePort {
                 .then();
     }
 
+    @Override
+    public Mono<Void> evict(String apiKeyHash) {
+        return redisTemplate.opsForValue()
+                .delete(cacheKeyFromHash(apiKeyHash))
+                .then();
+    }
+
     private String cacheKey(String apiKey) {
-        return CACHE_KEY_PREFIX + hash(apiKey);
+        return cacheKeyFromHash(hash(apiKey));
+    }
+
+    private String cacheKeyFromHash(String apiKeyHash) {
+        return CACHE_KEY_PREFIX + apiKeyHash;
     }
 
     private String hash(String apiKey) {

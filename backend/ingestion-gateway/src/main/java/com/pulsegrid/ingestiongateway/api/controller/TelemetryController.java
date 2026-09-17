@@ -1,8 +1,8 @@
 package com.pulsegrid.ingestiongateway.api.controller;
 
 import com.pulsegrid.ingestiongateway.api.dto.TelemetryReadingRequest;
-import com.pulsegrid.ingestiongateway.application.command.ResolveDeviceByApiKeyCommand;
-import com.pulsegrid.ingestiongateway.application.port.in.ResolveDeviceByApiKeyUseCase;
+import com.pulsegrid.ingestiongateway.application.command.IngestTelemetryReadingCommand;
+import com.pulsegrid.ingestiongateway.application.port.in.IngestTelemetryReadingUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +20,13 @@ public class TelemetryController {
 
     private static final String API_KEY_HEADER = "X-Api-Key";
 
-    private final ResolveDeviceByApiKeyUseCase resolveDeviceByApiKeyUseCase;
+    private final IngestTelemetryReadingUseCase ingestTelemetryReadingUseCase;
 
     @PostMapping
     public Mono<ResponseEntity<Void>> ingest(@RequestHeader(API_KEY_HEADER) String apiKey,
                                               @Valid @RequestBody TelemetryReadingRequest request) {
-        var command = new ResolveDeviceByApiKeyCommand(apiKey);
-        return resolveDeviceByApiKeyUseCase.resolve(command)
+        var command = new IngestTelemetryReadingCommand(apiKey, request.metricType(), request.value(), request.recordedAt());
+        return ingestTelemetryReadingUseCase.ingest(command)
                 .map(result -> ResponseEntity.accepted().build());
     }
 }

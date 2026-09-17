@@ -5,6 +5,8 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
 server:
   port: 8091
@@ -14,3 +16,6 @@ app:
     base-url: ${DEVICE_REGISTRY_BASE_URL:http://localhost:8090}
   internal:
     service-token: ${INTERNAL_SERVICE_TOKEN:dev-only-internal-placeholder-never-use-in-production}
+  kafka:
+    telemetry-events-topic: telemetry-events
+    device-registry-events-topic: device-registry-events
