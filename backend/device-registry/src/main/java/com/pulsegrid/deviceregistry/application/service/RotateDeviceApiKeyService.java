@@ -51,6 +51,7 @@ public class RotateDeviceApiKeyService implements RotateDeviceApiKeyUseCase {
         deviceRegistryEventPublisherPort.publishApiKeyRotated(new ApiKeyRotatedEvent(
                 command.deviceId(),
                 currentActiveKey.getId(),
+                currentActiveKey.getKeyHash(),
                 newApiKey.getId(),
                 Instant.now()
         ));

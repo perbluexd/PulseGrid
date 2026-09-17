@@ -49,7 +49,7 @@ class DeviceRegistryEventPublisherAdapterIT {
     @Test
     void shouldPublishApiKeyRotatedEventToTopicWithDeviceIdAsKey() {
         UUID deviceId = UUID.randomUUID();
-        ApiKeyRotatedEvent event = new ApiKeyRotatedEvent(deviceId, UUID.randomUUID(), UUID.randomUUID(), Instant.now());
+        ApiKeyRotatedEvent event = new ApiKeyRotatedEvent(deviceId, UUID.randomUUID(), "revoked-hash", UUID.randomUUID(), Instant.now());
 
         deviceRegistryEventPublisherAdapter.publishApiKeyRotated(event);
 

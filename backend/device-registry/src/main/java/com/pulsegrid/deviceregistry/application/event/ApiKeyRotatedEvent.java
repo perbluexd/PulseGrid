@@ -6,6 +6,7 @@ import java.util.UUID;
 public record ApiKeyRotatedEvent(
         UUID deviceId,
         UUID revokedApiKeyId,
+        String revokedApiKeyHash,
         UUID newApiKeyId,
         Instant occurredAt
 ) {
