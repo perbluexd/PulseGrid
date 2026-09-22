@@ -48,5 +48,22 @@ services:
     ports:
       - "6379:6379"
 
+  ingestion-gateway:
+    build:
+      context: ./backend/ingestion-gateway
+    container_name: pulsegrid-ingestion-gateway
+    restart: unless-stopped
+    ports:
+      - "8091:8091"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DEVICE_REGISTRY_BASE_URL: http://device-registry:8090
+    depends_on:
+      - device-registry
+      - kafka
+      - redis
+
 volumes:
   device_registry_db_data:

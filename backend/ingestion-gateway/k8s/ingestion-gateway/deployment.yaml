@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingestion-gateway
+  labels:
+    app: ingestion-gateway
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ingestion-gateway
+  template:
+    metadata:
+      labels:
+        app: ingestion-gateway
+    spec:
+      containers:
+        - name: ingestion-gateway
+          image: docker.io/perblue/ingestion-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8091
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: ingestion-gateway-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: ingestion-gateway-config
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: ingestion-gateway-config
+                  key: REDIS_PORT
+            - name: DEVICE_REGISTRY_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: ingestion-gateway-config
+                  key: DEVICE_REGISTRY_BASE_URL
+            - name: INTERNAL_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ingestion-gateway-secret
+                  key: INTERNAL_SERVICE_TOKEN
