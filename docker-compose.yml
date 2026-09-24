@@ -26,6 +26,19 @@ services:
       - device-registry-db
       - kafka
 
+  aggregation-service-db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: pulsegrid-aggregation-service-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aggregation_service_db
+      POSTGRES_USER: aggregation_service_user
+      POSTGRES_PASSWORD: aggregation_service_pass
+    ports:
+      - "5441:5432"
+    volumes:
+      - aggregation_service_db_data:/var/lib/postgresql/data
+
   kafka:
     image: apache/kafka:4.3.1
     container_name: pulsegrid-kafka
@@ -67,3 +80,4 @@ services:
 
 volumes:
   device_registry_db_data:
+  aggregation_service_db_data:
