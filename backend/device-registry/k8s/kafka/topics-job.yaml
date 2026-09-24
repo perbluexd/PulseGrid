@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-topics-init
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: kafka-topics-init
+          image: apache/kafka:4.3.1
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              TOPICS=/opt/kafka/bin/kafka-topics.sh
+              BS=kafka:9092
+              until $TOPICS --bootstrap-server $BS --list > /dev/null 2>&1; do sleep 2; done
+              ensure_topic() {
+                $TOPICS --bootstrap-server $BS --create --if-not-exists --topic $1 --partitions $2 --replication-factor 1
+                CURRENT=$($TOPICS --bootstrap-server $BS --describe --topic $1 | grep -c 'Partition: ')
+                if [ "$CURRENT" -lt "$2" ]; then
+                  $TOPICS --bootstrap-server $BS --alter --topic $1 --partitions $2
+                fi
+              }
+              ensure_topic telemetry-events 3
+              ensure_topic device-registry-events 1
