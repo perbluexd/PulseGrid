@@ -13,6 +13,21 @@ spring:
       group-id: aggregation-service
       auto-offset-reset: earliest
 
+server:
+  port: 8092
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
 app:
   kafka:
     telemetry-events-topic: telemetry-events

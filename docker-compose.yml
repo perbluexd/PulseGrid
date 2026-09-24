@@ -38,6 +38,27 @@ services:
       - "5441:5432"
     volumes:
       - aggregation_service_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aggregation_service_user -d aggregation_service_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  aggregation-service:
+    build:
+      context: ./backend/aggregation-service
+    container_name: pulsegrid-aggregation-service
+    restart: unless-stopped
+    ports:
+      - "8092:8092"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://aggregation-service-db:5432/aggregation_service_db
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      aggregation-service-db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
 
   kafka:
     image: apache/kafka:4.3.1
