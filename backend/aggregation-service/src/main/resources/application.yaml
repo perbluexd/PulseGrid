@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: aggregation-service
+  datasource:
+    url: jdbc:postgresql://localhost:5441/aggregation_service_db
+    username: aggregation_service_user
+    password: aggregation_service_pass
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: aggregation-service
+      auto-offset-reset: earliest
+
+server:
+  port: 8092
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+app:
+  kafka:
+    telemetry-events-topic: telemetry-events

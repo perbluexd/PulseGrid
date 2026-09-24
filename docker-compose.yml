@@ -23,8 +23,44 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://device-registry-db:5432/device_registry_db
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
-      - device-registry-db
-      - kafka
+      device-registry-db:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
+
+  aggregation-service-db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: pulsegrid-aggregation-service-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aggregation_service_db
+      POSTGRES_USER: aggregation_service_user
+      POSTGRES_PASSWORD: aggregation_service_pass
+    ports:
+      - "5441:5432"
+    volumes:
+      - aggregation_service_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aggregation_service_user -d aggregation_service_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  aggregation-service:
+    build:
+      context: ./backend/aggregation-service
+    container_name: pulsegrid-aggregation-service
+    restart: unless-stopped
+    ports:
+      - "8092:8092"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://aggregation-service-db:5432/aggregation_service_db
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      aggregation-service-db:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
 
   kafka:
     image: apache/kafka:4.3.1
@@ -40,6 +76,29 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  kafka-init:
+    image: apache/kafka:4.3.1
+    container_name: pulsegrid-kafka-init
+    restart: "no"
+    depends_on:
+      - kafka
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        TOPICS=/opt/kafka/bin/kafka-topics.sh
+        BS=kafka:9092
+        until $$TOPICS --bootstrap-server $$BS --list > /dev/null 2>&1; do sleep 2; done
+        ensure_topic() {
+          $$TOPICS --bootstrap-server $$BS --create --if-not-exists --topic $$1 --partitions $$2 --replication-factor 1
+          CURRENT=$$($$TOPICS --bootstrap-server $$BS --describe --topic $$1 | grep -c 'Partition: ')
+          if [ "$$CURRENT" -lt "$$2" ]; then
+            $$TOPICS --bootstrap-server $$BS --alter --topic $$1 --partitions $$2
+          fi
+        }
+        ensure_topic telemetry-events 3
+        ensure_topic device-registry-events 1
 
   redis:
     image: redis:7-alpine
@@ -61,9 +120,13 @@ services:
       REDIS_PORT: 6379
       DEVICE_REGISTRY_BASE_URL: http://device-registry:8090
     depends_on:
-      - device-registry
-      - kafka
-      - redis
+      device-registry:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
 
 volumes:
   device_registry_db_data:
+  aggregation_service_db_data:
