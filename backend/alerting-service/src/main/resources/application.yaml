@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: alerting-service
+  datasource:
+    url: jdbc:postgresql://localhost:5442/alerting_service_db
+    username: alerting_service_user
+    password: alerting_service_pass
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: alerting-service
+      auto-offset-reset: latest
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:pulsegrid}
+    password: ${RABBITMQ_PASSWORD:pulsegrid}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+
+server:
+  port: 8093
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-placeholder-never-use-in-production}
+  internal:
+    service-token: ${INTERNAL_SERVICE_TOKEN:dev-only-internal-placeholder-never-use-in-production}
+  device-registry:
+    base-url: ${DEVICE_REGISTRY_BASE_URL:http://localhost:8090}
+  kafka:
+    telemetry-events-topic: telemetry-events
+    device-registry-events-topic: device-registry-events
+  rabbitmq:
+    alert-notifications:
+      exchange: alert-notifications.exchange
+      queue: alert-notifications
+      routing-key: alert.triggered
+      dead-letter-exchange: alert-notifications.dlx
+      dead-letter-queue: alert-notifications.dlq
+      confirm-timeout: 5s

@@ -1,0 +1,6 @@
+package com.pulsegrid.alertingservice.application.command;
+
+import java.util.UUID;
+
+public record ResolveAlertCommand(UUID alertId, UUID userId) {
+}
