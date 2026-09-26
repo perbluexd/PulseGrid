@@ -1,14 +1,17 @@
 package com.pulsegrid.deviceregistry.api.controller;
 
 import com.pulsegrid.deviceregistry.api.dto.internal.DeviceGroupsResponse;
+import com.pulsegrid.deviceregistry.api.dto.internal.InternalDeviceResponse;
 import com.pulsegrid.deviceregistry.api.dto.internal.ResolveByApiKeyRequest;
 import com.pulsegrid.deviceregistry.api.dto.internal.ResolveByApiKeyResponse;
 import com.pulsegrid.deviceregistry.api.error.ErrorResponse;
 import com.pulsegrid.deviceregistry.api.mapper.DeviceGroupsResponseMapper;
 import com.pulsegrid.deviceregistry.api.mapper.ResolveByApiKeyResponseMapper;
+import com.pulsegrid.deviceregistry.application.command.GetDeviceCommand;
 import com.pulsegrid.deviceregistry.application.command.GetDeviceGroupsCommand;
 import com.pulsegrid.deviceregistry.application.command.ResolveDeviceByApiKeyCommand;
 import com.pulsegrid.deviceregistry.application.port.in.GetDeviceGroupsUseCase;
+import com.pulsegrid.deviceregistry.application.port.in.GetDeviceUseCase;
 import com.pulsegrid.deviceregistry.application.port.in.ResolveDeviceByApiKeyUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,6 +45,7 @@ public class InternalDeviceController {
     private final ResolveByApiKeyResponseMapper resolveByApiKeyResponseMapper;
     private final GetDeviceGroupsUseCase getDeviceGroupsUseCase;
     private final DeviceGroupsResponseMapper deviceGroupsResponseMapper;
+    private final GetDeviceUseCase getDeviceUseCase;
 
     @Operation(summary = "Resolver un dispositivo por su ApiKey", description = "Usado por Ingestion Gateway para identificar al dispositivo dueño de una ApiKey cruda")
     @ApiResponses({
@@ -72,6 +76,19 @@ public class InternalDeviceController {
         var command = new GetDeviceGroupsCommand(id);
         var result = getDeviceGroupsUseCase.getGroups(command);
         var response = deviceGroupsResponseMapper.toResponse(result);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @Operation(summary = "Obtener un dispositivo por id", description = "Usado por Alerting Service para validar el deviceId de una regla y enriquecer notificaciones con el nombre")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Dispositivo encontrado"),
+            @ApiResponse(responseCode = "404", description = "El dispositivo no existe (ERR-006)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<InternalDeviceResponse> get(@Parameter(description = "Id del dispositivo") @PathVariable UUID id) {
+        var result = getDeviceUseCase.get(new GetDeviceCommand(id));
+        var response = new InternalDeviceResponse(result.id(), result.name(), result.status());
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }
