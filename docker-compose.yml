@@ -62,6 +62,69 @@ services:
       kafka-init:
         condition: service_completed_successfully
 
+  alerting-service-db:
+    image: postgres:16-alpine
+    container_name: pulsegrid-alerting-service-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: alerting_service_db
+      POSTGRES_USER: alerting_service_user
+      POSTGRES_PASSWORD: alerting_service_pass
+    ports:
+      - "5442:5432"
+    volumes:
+      - alerting_service_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alerting_service_user -d alerting_service_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  alerting-service:
+    build:
+      context: ./backend/alerting-service
+    container_name: pulsegrid-alerting-service
+    restart: unless-stopped
+    ports:
+      - "8093:8093"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://alerting-service-db:5432/alerting_service_db
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      DEVICE_REGISTRY_BASE_URL: http://device-registry:8090
+    depends_on:
+      alerting-service-db:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      device-registry:
+        condition: service_started
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: pulsegrid-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: pulsegrid
+      RABBITMQ_DEFAULT_PASS: pulsegrid
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   kafka:
     image: apache/kafka:4.3.1
     container_name: pulsegrid-kafka
@@ -130,3 +193,5 @@ services:
 volumes:
   device_registry_db_data:
   aggregation_service_db_data:
+  alerting_service_db_data:
+  rabbitmq_data:
