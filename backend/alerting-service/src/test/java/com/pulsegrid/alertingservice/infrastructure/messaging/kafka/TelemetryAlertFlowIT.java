@@ -80,7 +80,7 @@ class TelemetryAlertFlowIT {
     private ObjectMapper objectMapper;
 
     @Test
-    void shouldCreateAlertAndPublishToRabbitWhenTelemetryCrossesGroupThreshold() throws Exception {
+    void shouldCreateAlertAndRelayItThroughOutboxToRabbitWhenTelemetryCrossesGroupThreshold() throws Exception {
         UUID deviceId = UUID.randomUUID();
         UUID groupId = UUID.randomUUID();
         AlertRule rule = alertRuleRepositoryPort.save(AlertRule.create(null, groupId, "TEMPERATURE",
@@ -100,9 +100,23 @@ class TelemetryAlertFlowIT {
         assertThat(body.get("deviceName").asText()).isEqualTo("Horno 3");
         assertThat(body.get("triggeredValue").asDouble()).isEqualTo(92.5);
 
-        String status = jdbcTemplate.queryForObject(
-                "SELECT status FROM alerts WHERE id = ?", String.class, UUID.fromString(body.get("alertId").asText()));
+        UUID alertId = UUID.fromString(body.get("alertId").asText());
+        String status = jdbcTemplate.queryForObject("SELECT status FROM alerts WHERE id = ?", String.class, alertId);
         assertThat(status).isEqualTo("TRIGGERED");
+
+        assertThat(awaitOutboxStatus(alertId, "SENT")).isEqualTo("SENT");
+    }
+
+    private String awaitOutboxStatus(UUID alertId, String expected) throws InterruptedException {
+        String status = null;
+        for (int attempt = 0; attempt < 20 && !expected.equals(status); attempt++) {
+            status = jdbcTemplate.queryForObject(
+                    "SELECT status FROM outbox_events WHERE aggregate_id = ?", String.class, alertId);
+            if (!expected.equals(status)) {
+                Thread.sleep(500);
+            }
+        }
+        return status;
     }
 
     private void publish(UUID deviceId, double value) throws Exception {

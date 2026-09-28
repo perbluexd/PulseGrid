@@ -1,7 +1,6 @@
 package com.pulsegrid.alertingservice.infrastructure.messaging.rabbitmq;
 
 import com.pulsegrid.alertingservice.application.event.AlertTriggeredNotification;
-import com.pulsegrid.alertingservice.application.port.out.AlertNotificationPublisherPort;
 import com.pulsegrid.alertingservice.infrastructure.messaging.rabbitmq.config.RabbitMqProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.AmqpException;
@@ -15,12 +14,11 @@ import java.util.concurrent.TimeoutException;
 
 @Component
 @RequiredArgsConstructor
-public class AlertNotificationRabbitPublisherAdapter implements AlertNotificationPublisherPort {
+public class AlertNotificationRabbitPublisher {
 
     private final RabbitTemplate rabbitTemplate;
     private final RabbitMqProperties properties;
 
-    @Override
     public void publish(AlertTriggeredNotification notification) {
         CorrelationData correlationData = new CorrelationData(notification.alertId().toString());
 

@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest(
-        classes = {RabbitMqConfig.class, AlertNotificationRabbitPublisherAdapter.class},
+        classes = {RabbitMqConfig.class, AlertNotificationRabbitPublisher.class},
         properties = {
                 "spring.rabbitmq.publisher-confirm-type=correlated",
                 "spring.rabbitmq.publisher-returns=true",
@@ -46,14 +46,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 )
 @ImportAutoConfiguration({RabbitAutoConfiguration.class, JacksonAutoConfiguration.class})
 @Testcontainers
-class AlertNotificationRabbitPublisherAdapterIT {
+class AlertNotificationRabbitPublisherIT {
 
     @Container
     @ServiceConnection
     static final RabbitMQContainer RABBIT = new RabbitMQContainer(DockerImageName.parse("rabbitmq:4-management-alpine"));
 
     @Autowired
-    private AlertNotificationRabbitPublisherAdapter publisherAdapter;
+    private AlertNotificationRabbitPublisher publisher;
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -68,7 +68,7 @@ class AlertNotificationRabbitPublisherAdapterIT {
     void shouldPublishPersistentJsonMessageToAlertNotificationsQueue() throws Exception {
         AlertTriggeredNotification notification = notification();
 
-        publisherAdapter.publish(notification);
+        publisher.publish(notification);
 
         Message message = rabbitTemplate.receive(properties.queue(), 5000);
         assertThat(message).isNotNull();
@@ -86,9 +86,9 @@ class AlertNotificationRabbitPublisherAdapterIT {
         RabbitMqProperties unroutable = new RabbitMqProperties(properties.exchange(), properties.queue(),
                 "routing.key.sin.binding", properties.deadLetterExchange(), properties.deadLetterQueue(),
                 Duration.ofSeconds(5));
-        AlertNotificationRabbitPublisherAdapter adapter = new AlertNotificationRabbitPublisherAdapter(rabbitTemplate, unroutable);
+        AlertNotificationRabbitPublisher unroutablePublisher = new AlertNotificationRabbitPublisher(rabbitTemplate, unroutable);
 
-        assertThatThrownBy(() -> adapter.publish(notification()))
+        assertThatThrownBy(() -> unroutablePublisher.publish(notification()))
                 .isInstanceOf(AmqpException.class)
                 .hasMessageContaining("no pudo enrutar");
     }

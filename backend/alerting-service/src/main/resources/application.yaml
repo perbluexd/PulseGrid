@@ -63,3 +63,8 @@ app:
       dead-letter-exchange: alert-notifications.dlx
       dead-letter-queue: alert-notifications.dlq
       confirm-timeout: 5s
+  outbox:
+    relay-interval: 2s
+    batch-size: 100
+    purge-cron: "0 0 3 * * *"
+    sent-retention: 7d
