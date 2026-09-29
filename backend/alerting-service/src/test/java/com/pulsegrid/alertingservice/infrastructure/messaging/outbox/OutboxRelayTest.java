@@ -45,7 +45,7 @@ class OutboxRelayTest {
 
     @BeforeEach
     void setUp() {
-        OutboxProperties properties = new OutboxProperties(Duration.ofSeconds(2), BATCH_SIZE, "0 0 3 * * *", Duration.ofDays(7));
+        OutboxProperties properties = new OutboxProperties(BATCH_SIZE, Duration.ofDays(7));
         relay = new OutboxRelay(repository, publisher, objectMapper, properties);
     }
 
