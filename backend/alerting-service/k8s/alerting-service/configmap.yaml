@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alerting-service-config
+data:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://alerting-service-db:5432/alerting_service_db
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: "5672"
+  DEVICE_REGISTRY_BASE_URL: http://device-registry:8090

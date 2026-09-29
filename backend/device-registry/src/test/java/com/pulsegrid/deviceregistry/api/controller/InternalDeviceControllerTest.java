@@ -4,13 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pulsegrid.deviceregistry.api.dto.internal.ResolveByApiKeyRequest;
 import com.pulsegrid.deviceregistry.api.mapper.DeviceGroupsResponseMapper;
 import com.pulsegrid.deviceregistry.api.mapper.ResolveByApiKeyResponseMapper;
+import com.pulsegrid.deviceregistry.application.command.GetDeviceCommand;
 import com.pulsegrid.deviceregistry.application.command.GetDeviceGroupsCommand;
 import com.pulsegrid.deviceregistry.application.command.ResolveDeviceByApiKeyCommand;
 import com.pulsegrid.deviceregistry.application.error.DeviceNotFoundException;
 import com.pulsegrid.deviceregistry.application.error.InvalidApiKeyException;
 import com.pulsegrid.deviceregistry.application.port.in.GetDeviceGroupsUseCase;
+import com.pulsegrid.deviceregistry.application.port.in.GetDeviceUseCase;
 import com.pulsegrid.deviceregistry.application.port.in.ResolveDeviceByApiKeyUseCase;
 import com.pulsegrid.deviceregistry.application.port.result.GetDeviceGroupsResult;
+import com.pulsegrid.deviceregistry.application.port.result.GetDeviceResult;
 import com.pulsegrid.deviceregistry.application.port.result.ResolveDeviceByApiKeyResult;
 import com.pulsegrid.deviceregistry.domain.model.DeviceStatus;
 import com.pulsegrid.deviceregistry.domain.model.DeviceType;
@@ -27,6 +30,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,6 +63,9 @@ class InternalDeviceControllerTest {
 
     @MockitoBean
     private GetDeviceGroupsUseCase getDeviceGroupsUseCase;
+
+    @MockitoBean
+    private GetDeviceUseCase getDeviceUseCase;
 
     @Test
     void shouldReturn200WithDeviceWhenApiKeyIsValid() throws Exception {
@@ -121,6 +128,33 @@ class InternalDeviceControllerTest {
                 .thenThrow(new DeviceNotFoundException(deviceId.toString()));
 
         mockMvc.perform(get("/api/v1/internal/devices/{id}/groups", deviceId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("ERR-006"));
+    }
+
+    @Test
+    void shouldReturn200WithDeviceNameAndStatusWhenDeviceExists() throws Exception {
+        UUID deviceId = UUID.randomUUID();
+        Instant now = Instant.now();
+        GetDeviceResult result = new GetDeviceResult(deviceId, "Sensor Temperatura", DeviceType.SENSOR,
+                DeviceStatus.ACTIVE, "Planta 1", now, now, null);
+
+        when(getDeviceUseCase.get(new GetDeviceCommand(deviceId))).thenReturn(result);
+
+        mockMvc.perform(get("/api/v1/internal/devices/{id}", deviceId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.deviceId").value(deviceId.toString()))
+                .andExpect(jsonPath("$.name").value("Sensor Temperatura"))
+                .andExpect(jsonPath("$.status").value("ACTIVE"));
+    }
+
+    @Test
+    void shouldReturn404WhenGettingUnknownDevice() throws Exception {
+        UUID deviceId = UUID.randomUUID();
+
+        when(getDeviceUseCase.get(any())).thenThrow(new DeviceNotFoundException(deviceId.toString()));
+
+        mockMvc.perform(get("/api/v1/internal/devices/{id}", deviceId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("ERR-006"));
     }
