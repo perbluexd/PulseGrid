@@ -107,6 +107,53 @@ services:
       device-registry:
         condition: service_started
 
+  notification-workers-db:
+    image: postgres:16-alpine
+    container_name: pulsegrid-notification-workers-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: notification_workers_db
+      POSTGRES_USER: notification_workers_user
+      POSTGRES_PASSWORD: notification_workers_pass
+    ports:
+      - "5443:5432"
+    volumes:
+      - notification_workers_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification_workers_user -d notification_workers_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  notification-workers:
+    build:
+      context: ./backend/notification-workers
+    container_name: pulsegrid-notification-workers
+    restart: unless-stopped
+    ports:
+      - "8094:8094"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://notification-workers-db:5432/notification_workers_db
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+    depends_on:
+      notification-workers-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: pulsegrid-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   rabbitmq:
     image: rabbitmq:4-management-alpine
     container_name: pulsegrid-rabbitmq
@@ -195,3 +242,4 @@ volumes:
   aggregation_service_db_data:
   alerting_service_db_data:
   rabbitmq_data:
+  notification_workers_db_data:
