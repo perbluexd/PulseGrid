@@ -18,4 +18,8 @@ public interface ProcessedNotificationJpaRepository extends JpaRepository<Proces
             ON CONFLICT (alert_id) DO NOTHING
             """, nativeQuery = true)
     int insertIfAbsent(@Param("alertId") UUID alertId, @Param("processedAt") Instant processedAt);
+
+    @Modifying
+    @Query("DELETE FROM ProcessedNotificationEntity p WHERE p.processedAt < :processedBefore")
+    int deleteByProcessedAtBefore(@Param("processedBefore") Instant processedBefore);
 }

@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notification-workers-db-config
+data:
+  POSTGRES_DB: notification_workers_db

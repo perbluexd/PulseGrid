@@ -1,10 +1,12 @@
 spring:
   application:
     name: notification-workers
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   datasource:
     url: jdbc:postgresql://localhost:5443/notification_workers_db
-    username: notification_workers_user
-    password: notification_workers_pass
+    username: ${SPRING_DATASOURCE_USERNAME:notification_workers_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:notification_workers_pass}
   jpa:
     open-in-view: false
     hibernate:
@@ -37,6 +39,29 @@ spring:
 
 server:
   port: 8094
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db,rabbit
+  health:
+    circuitbreakers:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
 
 app:
   notifications:
@@ -48,3 +73,34 @@ app:
       queue: alert-notifications
       dead-letter-exchange: alert-notifications.dlx
       dead-letter-queue: alert-notifications.dlq
+  processed-notifications:
+    purge-cron: "0 0 3 * * *"
+    retention: 7d
+
+resilience4j:
+  retry:
+    instances:
+      email:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - org.springframework.mail.MailSendException
+  circuitbreaker:
+    instances:
+      email:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 1
+        automatic-transition-from-open-to-half-open-enabled: true
+        register-health-indicator: true
+        record-exceptions:
+          - org.springframework.mail.MailSendException
+  ratelimiter:
+    instances:
+      email:
+        limit-for-period: 10
+        limit-refresh-period: 1s
+        timeout-duration: 5s

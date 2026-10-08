@@ -11,9 +11,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AlertNotificationListener {
 
+    public static final String LISTENER_ID = "alertNotificationListener";
+
     private final ProcessAlertNotificationUseCase processAlertNotificationUseCase;
 
-    @RabbitListener(queues = "${app.rabbitmq.alert-notifications.queue}")
+    @RabbitListener(id = LISTENER_ID, queues = "${app.rabbitmq.alert-notifications.queue}")
     public void onAlertTriggered(AlertTriggeredNotification notification) {
         processAlertNotificationUseCase.process(new ProcessAlertNotificationCommand(
                 notification.alertId(),
