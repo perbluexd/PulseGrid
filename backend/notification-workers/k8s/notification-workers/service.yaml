@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-workers
+  labels:
+    app: notification-workers
+spec:
+  selector:
+    app: notification-workers
+  ports:
+    - name: http
+      port: 8094
+      targetPort: 8094

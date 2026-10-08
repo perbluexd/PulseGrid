@@ -37,6 +37,7 @@ spec:
               command: ["rabbitmq-diagnostics", "-q", "ping"]
             initialDelaySeconds: 15
             periodSeconds: 10
+            timeoutSeconds: 10
           volumeMounts:
             - name: data
               mountPath: /var/lib/rabbitmq

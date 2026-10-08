@@ -1,0 +1,106 @@
+spring:
+  application:
+    name: notification-workers
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  datasource:
+    url: jdbc:postgresql://localhost:5443/notification_workers_db
+    username: ${SPRING_DATASOURCE_USERNAME:notification_workers_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:notification_workers_pass}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:pulsegrid}
+    password: ${RABBITMQ_PASSWORD:pulsegrid}
+    listener:
+      simple:
+        prefetch: 1
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1s
+          multiplier: 2
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+
+server:
+  port: 8094
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db,rabbit
+  health:
+    circuitbreakers:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+app:
+  notifications:
+    email:
+      from: ${NOTIFICATIONS_EMAIL_FROM:alerts@pulsegrid.local}
+      to: ${NOTIFICATIONS_EMAIL_TO:ops-team@pulsegrid.local}
+  rabbitmq:
+    alert-notifications:
+      queue: alert-notifications
+      dead-letter-exchange: alert-notifications.dlx
+      dead-letter-queue: alert-notifications.dlq
+  processed-notifications:
+    purge-cron: "0 0 3 * * *"
+    retention: 7d
+
+resilience4j:
+  retry:
+    instances:
+      email:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - org.springframework.mail.MailSendException
+  circuitbreaker:
+    instances:
+      email:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 1
+        automatic-transition-from-open-to-half-open-enabled: true
+        register-health-indicator: true
+        record-exceptions:
+          - org.springframework.mail.MailSendException
+  ratelimiter:
+    instances:
+      email:
+        limit-for-period: 10
+        limit-refresh-period: 1s
+        timeout-duration: 5s

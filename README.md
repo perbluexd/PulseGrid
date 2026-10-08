@@ -10,7 +10,7 @@ Plataforma de telemetría/IoT con alertas en tiempo real, construida como un con
 | `ingestion-gateway` | Pendiente | Ingesta reactiva de telemetría (WebFlux) |
 | `aggregation-service` | Pendiente | Consumidor Kafka, agregados en TimescaleDB |
 | `alerting-service` | Pendiente | Reglas de alerta, consumidor Kafka + productor RabbitMQ |
-| `notification-workers` | Pendiente | Consumidor RabbitMQ, notificaciones |
+| [`notification-workers`](backend/notification-workers/README.md) | Implementado | Consumidor RabbitMQ idempotente, envío de emails con Resilience4j |
 | `query-api` | Pendiente | API de consulta (GraphQL) para el dashboard |
 
 Solo `device-registry` tiene código por ahora; el resto está diseñado (ver documentación de fases) pero no arrancado.
