@@ -15,6 +15,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -27,7 +28,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -73,13 +73,14 @@ class GraphQlEndpointSecurityTest {
     void shouldExecuteQueryForViewerRole() throws Exception {
         when(deviceQueryUseCase.listGroups()).thenReturn(List.of());
 
-        MvcResult pending = mockMvc.perform(post("/graphql").contentType(MediaType.APPLICATION_JSON).content(BODY)
-                        .header("Authorization", "Bearer " + token("VIEWER", SECRET)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+        ResultActions sent = mockMvc.perform(post("/graphql").contentType(MediaType.APPLICATION_JSON).content(BODY)
+                .header("Authorization", "Bearer " + token("VIEWER", SECRET)));
+        MvcResult first = sent.andReturn();
+        ResultActions completed = first.getRequest().isAsyncStarted()
+                ? mockMvc.perform(asyncDispatch(first))
+                : sent;
 
-        mockMvc.perform(asyncDispatch(pending))
-                .andExpect(status().isOk())
+        completed.andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.deviceGroups").isEmpty());
     }
 
