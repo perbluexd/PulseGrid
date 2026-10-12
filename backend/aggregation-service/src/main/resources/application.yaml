@@ -29,5 +29,7 @@ management:
       application: ${spring.application.name}
 
 app:
+  internal:
+    service-token: ${INTERNAL_SERVICE_TOKEN:dev-only-internal-placeholder-never-use-in-production}
   kafka:
     telemetry-events-topic: telemetry-events

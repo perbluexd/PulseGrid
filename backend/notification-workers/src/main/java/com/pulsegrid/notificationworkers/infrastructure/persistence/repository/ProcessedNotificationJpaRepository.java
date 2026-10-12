@@ -1,12 +1,14 @@
 package com.pulsegrid.notificationworkers.infrastructure.persistence.repository;
 
 import com.pulsegrid.notificationworkers.infrastructure.persistence.entity.ProcessedNotificationEntity;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public interface ProcessedNotificationJpaRepository extends JpaRepository<ProcessedNotificationEntity, UUID> {
@@ -22,4 +24,6 @@ public interface ProcessedNotificationJpaRepository extends JpaRepository<Proces
     @Modifying
     @Query("DELETE FROM ProcessedNotificationEntity p WHERE p.processedAt < :processedBefore")
     int deleteByProcessedAtBefore(@Param("processedBefore") Instant processedBefore);
+
+    List<ProcessedNotificationEntity> findAllByOrderByProcessedAtDesc(Limit limit);
 }

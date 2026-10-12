@@ -6,14 +6,14 @@ Plataforma de telemetría/IoT con alertas en tiempo real, construida como un con
 
 | Servicio | Estado | Responsabilidad |
 |---|---|---|
-| [`device-registry`](backend/device-registry/README.md) | En construcción | CRUD de dispositivos/grupos, login del dashboard, emisión de JWT |
-| `ingestion-gateway` | Pendiente | Ingesta reactiva de telemetría (WebFlux) |
-| `aggregation-service` | Pendiente | Consumidor Kafka, agregados en TimescaleDB |
-| `alerting-service` | Pendiente | Reglas de alerta, consumidor Kafka + productor RabbitMQ |
+| [`device-registry`](backend/device-registry/README.md) | Implementado | CRUD de dispositivos/grupos, login del dashboard, emisión de JWT |
+| `ingestion-gateway` | Implementado | Ingesta reactiva de telemetría (WebFlux) |
+| `aggregation-service` | Implementado | Consumidor Kafka, agregados en TimescaleDB, lectura interna para query-api |
+| `alerting-service` | Implementado | Reglas de alerta, consumidor Kafka + productor RabbitMQ |
 | [`notification-workers`](backend/notification-workers/README.md) | Implementado | Consumidor RabbitMQ idempotente, envío de emails con Resilience4j |
-| `query-api` | Pendiente | API de consulta (GraphQL) para el dashboard |
+| [`query-api`](backend/query-api/README.md) | Implementado | Fachada GraphQL de solo lectura para el dashboard (compone los otros servicios) |
 
-Solo `device-registry` tiene código por ahora; el resto está diseñado (ver documentación de fases) pero no arrancado.
+Los seis microservicios están implementados, cada uno con su Dockerfile, manifiestos de Kubernetes y pipeline de CI/CD.
 
 ## Cómo correr el proyecto
 
@@ -21,4 +21,4 @@ Solo `device-registry` tiene código por ahora; el resto está diseñado (ver do
 docker compose up -d --build
 ```
 
-Levanta `device-registry` junto a su base de datos Postgres. Ver el [README de `device-registry`](backend/device-registry/README.md) para el detalle de endpoints, autenticación y documentación interactiva de la API.
+Levanta los seis microservicios con su infraestructura (Postgres, TimescaleDB, Kafka, RabbitMQ, Redis, Mailpit). El dashboard consulta todo por GraphQL en `http://localhost:8095/graphql` (GraphiQL en `/graphiql`). Ver el [README de `device-registry`](backend/device-registry/README.md) para el detalle de endpoints, autenticación y documentación interactiva de la API.
