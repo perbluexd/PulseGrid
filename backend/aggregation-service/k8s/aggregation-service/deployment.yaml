@@ -41,3 +41,8 @@ spec:
                 secretKeyRef:
                   name: aggregation-service-secret
                   key: SPRING_DATASOURCE_PASSWORD
+            - name: INTERNAL_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: aggregation-service-secret
+                  key: INTERNAL_SERVICE_TOKEN

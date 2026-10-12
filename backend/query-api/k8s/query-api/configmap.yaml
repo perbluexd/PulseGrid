@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: query-api-config
+data:
+  DEVICE_REGISTRY_BASE_URL: http://device-registry:8090
+  ALERTING_SERVICE_BASE_URL: http://alerting-service:8093
+  AGGREGATION_SERVICE_BASE_URL: http://aggregation-service:8092
+  NOTIFICATION_WORKERS_BASE_URL: http://notification-workers:8094

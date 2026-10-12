@@ -237,6 +237,28 @@ services:
       redis:
         condition: service_started
 
+  query-api:
+    build:
+      context: ./backend/query-api
+    container_name: pulsegrid-query-api
+    restart: unless-stopped
+    ports:
+      - "8095:8095"
+    environment:
+      DEVICE_REGISTRY_BASE_URL: http://device-registry:8090
+      ALERTING_SERVICE_BASE_URL: http://alerting-service:8093
+      AGGREGATION_SERVICE_BASE_URL: http://aggregation-service:8092
+      NOTIFICATION_WORKERS_BASE_URL: http://notification-workers:8094
+    depends_on:
+      device-registry:
+        condition: service_started
+      alerting-service:
+        condition: service_started
+      aggregation-service:
+        condition: service_started
+      notification-workers:
+        condition: service_started
+
 volumes:
   device_registry_db_data:
   aggregation_service_db_data:

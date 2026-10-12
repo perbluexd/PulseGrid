@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: query-api
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  threads:
+    virtual:
+      enabled: true
+  graphql:
+    graphiql:
+      enabled: true
+    schema:
+      printer:
+        enabled: true
+
+server:
+  port: 8095
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-placeholder-never-use-in-production}
+  internal:
+    service-token: ${INTERNAL_SERVICE_TOKEN:dev-only-internal-placeholder-never-use-in-production}
+  clients:
+    connect-timeout: 2s
+    read-timeout: 3s
+    device-registry-base-url: ${DEVICE_REGISTRY_BASE_URL:http://localhost:8090}
+    alerting-service-base-url: ${ALERTING_SERVICE_BASE_URL:http://localhost:8093}
+    aggregation-service-base-url: ${AGGREGATION_SERVICE_BASE_URL:http://localhost:8092}
+    notification-workers-base-url: ${NOTIFICATION_WORKERS_BASE_URL:http://localhost:8094}
+  graphql:
+    max-query-depth: 8
+    max-query-complexity: 300

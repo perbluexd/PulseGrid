@@ -1,0 +1,133 @@
+scalar DateTime
+
+type Query {
+    device(id: ID!): Device
+    devices(status: DeviceStatus): [Device!]!
+    deviceGroups: [DeviceGroup!]!
+    latestReading(deviceId: ID!, metricType: String!): Reading
+    telemetryHistory(deviceId: ID!, metricType: String!, from: DateTime!, to: DateTime!, bucketSize: BucketSize = ONE_MINUTE): [TelemetryBucket!]
+    alertRules(active: Boolean): [AlertRule!]!
+    alerts(filter: AlertFilter, first: Int = 20, after: String): AlertConnection!
+    notificationHistory(limit: Int = 50): [Notification!]
+}
+
+type Device {
+    id: ID!
+    name: String!
+    type: DeviceType!
+    status: DeviceStatus!
+    location: String
+    createdAt: DateTime!
+    lastSeenAt: DateTime
+    latestReadings: [Reading!]
+    telemetryHistory(metricType: String!, from: DateTime!, to: DateTime!, bucketSize: BucketSize = ONE_MINUTE): [TelemetryBucket!]
+}
+
+type DeviceGroup {
+    id: ID!
+    name: String!
+    description: String
+}
+
+type Reading {
+    metricType: String!
+    value: Float!
+    recordedAt: DateTime!
+}
+
+type TelemetryBucket {
+    bucketStart: DateTime!
+    avg: Float!
+    min: Float!
+    max: Float!
+    sampleCount: Int!
+}
+
+type AlertRule {
+    id: ID!
+    metricType: String!
+    condition: AlertCondition!
+    threshold: Float!
+    severity: AlertSeverity!
+    active: Boolean!
+    createdAt: DateTime!
+    device: Device
+    group: DeviceGroup
+}
+
+type Alert {
+    id: ID!
+    triggeredValue: Float!
+    severity: AlertSeverity!
+    status: AlertStatus!
+    triggeredAt: DateTime!
+    resolvedAt: DateTime
+    device: Device
+    rule: AlertRule
+    notification: Notification
+}
+
+type Notification {
+    alertId: ID!
+    notifiedAt: DateTime!
+    alert: Alert
+}
+
+input AlertFilter {
+    status: AlertStatus
+    severity: AlertSeverity
+    deviceId: ID
+}
+
+type AlertConnection {
+    edges: [AlertEdge!]!
+    pageInfo: PageInfo!
+    totalCount: Int!
+}
+
+type AlertEdge {
+    cursor: String!
+    node: Alert!
+}
+
+type PageInfo {
+    hasNextPage: Boolean!
+    endCursor: String
+}
+
+enum DeviceType {
+    SENSOR
+    GATEWAY
+    CONTROLLER
+}
+
+enum DeviceStatus {
+    ACTIVE
+    INACTIVE
+    DECOMMISSIONED
+}
+
+enum BucketSize {
+    ONE_MINUTE
+    FIVE_MINUTES
+    ONE_HOUR
+    ONE_DAY
+}
+
+enum AlertCondition {
+    GREATER_THAN
+    LESS_THAN
+    EQUALS
+}
+
+enum AlertSeverity {
+    INFO
+    WARNING
+    CRITICAL
+}
+
+enum AlertStatus {
+    TRIGGERED
+    ACKNOWLEDGED
+    RESOLVED
+}

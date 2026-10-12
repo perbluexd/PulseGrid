@@ -1,6 +1,6 @@
 # notification-workers
 
-Microservicio de PulseGrid que consume las alertas disparadas por `alerting-service` desde RabbitMQ y envía una notificación por email por cada una. No expone API de negocio: es un consumidor puro, pensado para escalar horizontalmente con varias réplicas compitiendo por la misma cola (competing consumers).
+Microservicio de PulseGrid que consume las alertas disparadas por `alerting-service` desde RabbitMQ y envía una notificación por email por cada una. No expone API de negocio: es un consumidor, pensado para escalar horizontalmente con varias réplicas compitiendo por la misma cola (competing consumers). Solo expone una lectura interna (`GET /api/v1/internal/notifications?alertIds=...` y `/recent?limit=`, con header `X-Internal-Service`) que usa query-api para mostrar qué alertas ya se notificaron.
 
 ## Stack
 
