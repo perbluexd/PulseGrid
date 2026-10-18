@@ -28,6 +28,8 @@ app:
     base-url: ${DEVICE_REGISTRY_BASE_URL:http://localhost:8090}
   internal:
     service-token: ${INTERNAL_SERVICE_TOKEN:dev-only-internal-placeholder-never-use-in-production}
+  cache:
+    device-api-key-ttl: 10m
   kafka:
     telemetry-events-topic: telemetry-events
     device-registry-events-topic: device-registry-events

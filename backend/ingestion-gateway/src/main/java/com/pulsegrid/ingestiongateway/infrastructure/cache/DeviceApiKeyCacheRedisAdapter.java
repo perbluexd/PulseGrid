@@ -1,7 +1,7 @@
 package com.pulsegrid.ingestiongateway.infrastructure.cache;
 
 import com.pulsegrid.ingestiongateway.application.port.out.DeviceApiKeyCachePort;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -9,16 +9,23 @@ import reactor.core.publisher.Mono;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.HexFormat;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
 public class DeviceApiKeyCacheRedisAdapter implements DeviceApiKeyCachePort {
 
     private static final String CACHE_KEY_PREFIX = "device-api-key:";
 
     private final ReactiveStringRedisTemplate redisTemplate;
+    private final Duration ttl;
+
+    public DeviceApiKeyCacheRedisAdapter(ReactiveStringRedisTemplate redisTemplate,
+                                         @Value("${app.cache.device-api-key-ttl}") Duration ttl) {
+        this.redisTemplate = redisTemplate;
+        this.ttl = ttl;
+    }
 
     @Override
     public Mono<UUID> get(String apiKey) {
@@ -30,7 +37,7 @@ public class DeviceApiKeyCacheRedisAdapter implements DeviceApiKeyCachePort {
     @Override
     public Mono<Void> put(String apiKey, UUID deviceId) {
         return redisTemplate.opsForValue()
-                .set(cacheKey(apiKey), deviceId.toString())
+                .set(cacheKey(apiKey), deviceId.toString(), ttl)
                 .then();
     }
 
