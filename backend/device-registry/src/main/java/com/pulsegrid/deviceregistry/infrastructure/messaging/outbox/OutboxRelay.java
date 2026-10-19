@@ -45,7 +45,11 @@ public class OutboxRelay {
                 event.markFailed(ex.getMessage());
                 continue;
             }
-            inFlight.put(event, publisher.send(event.getAggregateId().toString(), payload));
+            CompletableFuture<SendResult<String, Object>> future = publisher.send(event.getAggregateId().toString(), payload);
+            inFlight.put(event, future);
+            if (future.isCompletedExceptionally()) {
+                break;
+            }
         }
 
         for (Map.Entry<OutboxEventEntity, CompletableFuture<SendResult<String, Object>>> entry : inFlight.entrySet()) {

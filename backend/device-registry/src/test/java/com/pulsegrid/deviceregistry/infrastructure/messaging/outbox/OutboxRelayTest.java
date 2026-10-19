@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -78,14 +79,34 @@ class OutboxRelayTest {
         OutboxEventEntity second = pendingEvent(event.deviceId(), OutboxEventType.API_KEY_ROTATED, event);
         when(repository.lockNextPendingBatch(BATCH_SIZE)).thenReturn(List.of(first, second));
         when(publisher.send(anyString(), any()))
-                .thenReturn(CompletableFuture.failedFuture(new TimeoutException("Expiring 2 record(s)")))
+                .thenReturn(failsLater(new TimeoutException("Expiring 2 record(s)")))
                 .thenReturn(succeeded());
 
         relay.relayPendingEvents();
 
+        verify(publisher, times(2)).send(anyString(), any());
         assertThat(first.getStatus()).isEqualTo(OutboxEventStatus.PENDING);
         assertThat(first.getAttempts()).isEqualTo(1);
         assertThat(first.getLastError()).contains("Expiring");
+        assertThat(second.getStatus()).isEqualTo(OutboxEventStatus.PENDING);
+        assertThat(second.getAttempts()).isZero();
+    }
+
+    @Test
+    void shouldStopSendingTheBatchWhenSendFailsImmediately() throws Exception {
+        ApiKeyRotatedEvent event = apiKeyRotatedEvent();
+        OutboxEventEntity first = pendingEvent(event.deviceId(), OutboxEventType.API_KEY_ROTATED, event);
+        OutboxEventEntity second = pendingEvent(event.deviceId(), OutboxEventType.API_KEY_ROTATED, event);
+        when(repository.lockNextPendingBatch(BATCH_SIZE)).thenReturn(List.of(first, second));
+        when(publisher.send(anyString(), any()))
+                .thenReturn(CompletableFuture.failedFuture(new TimeoutException("Topic not present in metadata")));
+
+        relay.relayPendingEvents();
+
+        verify(publisher, times(1)).send(anyString(), any());
+        assertThat(first.getStatus()).isEqualTo(OutboxEventStatus.PENDING);
+        assertThat(first.getAttempts()).isEqualTo(1);
+        assertThat(first.getLastError()).contains("metadata");
         assertThat(second.getStatus()).isEqualTo(OutboxEventStatus.PENDING);
         assertThat(second.getAttempts()).isZero();
     }
@@ -114,6 +135,13 @@ class OutboxRelayTest {
 
     private CompletableFuture<SendResult<String, Object>> succeeded() {
         return CompletableFuture.completedFuture(null);
+    }
+
+    private CompletableFuture<SendResult<String, Object>> failsLater(Throwable error) {
+        CompletableFuture<SendResult<String, Object>> future = new CompletableFuture<>();
+        CompletableFuture.delayedExecutor(50, TimeUnit.MILLISECONDS)
+                .execute(() -> future.completeExceptionally(error));
+        return future;
     }
 
     private ApiKeyRotatedEvent apiKeyRotatedEvent() {
