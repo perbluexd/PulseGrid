@@ -15,6 +15,7 @@ import com.pulsegrid.deviceregistry.application.port.result.AddDeviceToGroupResu
 import com.pulsegrid.deviceregistry.domain.model.DeviceGroupMembership;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -28,6 +29,7 @@ public class AddDeviceToGroupService implements AddDeviceToGroupUseCase {
     private final DeviceRegistryEventPublisherPort deviceRegistryEventPublisherPort;
 
     @Override
+    @Transactional
     public AddDeviceToGroupResult addToGroup(AddDeviceToGroupCommand command) {
         deviceRepositoryPort.findById(command.deviceId())
                 .orElseThrow(() -> new DeviceNotFoundException(command.deviceId().toString()));

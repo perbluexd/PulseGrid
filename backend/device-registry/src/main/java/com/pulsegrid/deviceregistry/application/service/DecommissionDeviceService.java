@@ -11,6 +11,7 @@ import com.pulsegrid.deviceregistry.domain.model.ApiKey;
 import com.pulsegrid.deviceregistry.domain.model.Device;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
@@ -22,6 +23,7 @@ public class DecommissionDeviceService implements DecommissionDeviceUseCase {
     private final DeviceRegistryEventPublisherPort deviceRegistryEventPublisherPort;
 
     @Override
+    @Transactional
     public void decommission(DecommissionDeviceCommand command) {
         Device device = deviceRepositoryPort.findById(command.deviceId())
                 .orElseThrow(() -> new DeviceNotFoundException(command.deviceId().toString()));
