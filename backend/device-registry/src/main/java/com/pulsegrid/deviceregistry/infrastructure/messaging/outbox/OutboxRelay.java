@@ -9,6 +9,7 @@ import com.pulsegrid.deviceregistry.infrastructure.messaging.outbox.entity.Outbo
 import com.pulsegrid.deviceregistry.infrastructure.messaging.outbox.repository.OutboxEventJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -58,9 +59,10 @@ public class OutboxRelay {
                 entry.getValue().join();
                 event.markSent();
             } catch (CompletionException ex) {
+                String error = NestedExceptionUtils.getMostSpecificCause(ex).toString();
                 log.warn("No se pudo publicar el evento outbox {} (intento {}): {}",
-                        event.getId(), event.getAttempts() + 1, ex.getCause().getMessage());
-                event.registerFailedAttempt(ex.getCause().getMessage());
+                        event.getId(), event.getAttempts() + 1, error);
+                event.registerFailedAttempt(error);
                 return;
             }
         }
