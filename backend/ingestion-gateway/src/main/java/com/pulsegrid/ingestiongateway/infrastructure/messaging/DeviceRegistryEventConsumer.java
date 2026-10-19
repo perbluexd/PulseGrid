@@ -20,6 +20,7 @@ import reactor.kafka.receiver.ReceiverRecord;
 public class DeviceRegistryEventConsumer {
 
     private static final String REVOKED_API_KEY_HASH_FIELD = "revokedApiKeyHash";
+    private static final String ACTIVE_API_KEY_HASH_FIELD = "activeApiKeyHash";
 
     private final KafkaReceiver<String, String> deviceRegistryEventsReceiver;
     private final DeviceApiKeyCachePort deviceApiKeyCachePort;
@@ -43,18 +44,20 @@ public class DeviceRegistryEventConsumer {
 
     private Mono<Void> handleRecord(ReceiverRecord<String, String> record) {
         return Mono.fromCallable(() -> objectMapper.readTree(record.value()))
-                .flatMap(this::invalidateCacheIfApiKeyRotated)
+                .flatMap(this::invalidateCacheIfApiKeyNoLongerValid)
                 .doOnError(e -> log.error("Error procesando evento de device-registry-events, offset {}",
                         record.receiverOffset(), e))
                 .onErrorResume(e -> Mono.empty())
                 .doFinally(signal -> record.receiverOffset().acknowledge());
     }
 
-    private Mono<Void> invalidateCacheIfApiKeyRotated(JsonNode json) {
-        if (!json.hasNonNull(REVOKED_API_KEY_HASH_FIELD)) {
-            return Mono.empty();
+    private Mono<Void> invalidateCacheIfApiKeyNoLongerValid(JsonNode json) {
+        if (json.hasNonNull(REVOKED_API_KEY_HASH_FIELD)) {
+            return deviceApiKeyCachePort.evict(json.get(REVOKED_API_KEY_HASH_FIELD).asText());
         }
-        String revokedApiKeyHash = json.get(REVOKED_API_KEY_HASH_FIELD).asText();
-        return deviceApiKeyCachePort.evict(revokedApiKeyHash);
+        if (json.hasNonNull(ACTIVE_API_KEY_HASH_FIELD)) {
+            return deviceApiKeyCachePort.evict(json.get(ACTIVE_API_KEY_HASH_FIELD).asText());
+        }
+        return Mono.empty();
     }
 }
