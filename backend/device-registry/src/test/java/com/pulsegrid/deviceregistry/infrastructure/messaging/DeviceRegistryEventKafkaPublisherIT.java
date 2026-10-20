@@ -28,9 +28,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(classes = {KafkaProducerConfig.class, DeviceRegistryEventPublisherAdapter.class})
+@SpringBootTest(classes = {KafkaProducerConfig.class, DeviceRegistryEventKafkaPublisher.class})
 @Testcontainers
-class DeviceRegistryEventPublisherAdapterIT {
+class DeviceRegistryEventKafkaPublisherIT {
 
     private static final String TOPIC = "device-registry-events";
 
@@ -44,14 +44,14 @@ class DeviceRegistryEventPublisherAdapterIT {
     }
 
     @Autowired
-    private DeviceRegistryEventPublisherAdapter deviceRegistryEventPublisherAdapter;
+    private DeviceRegistryEventKafkaPublisher deviceRegistryEventKafkaPublisher;
 
     @Test
-    void shouldPublishApiKeyRotatedEventToTopicWithDeviceIdAsKey() {
+    void shouldSendApiKeyRotatedEventToTopicWithDeviceIdAsKey() {
         UUID deviceId = UUID.randomUUID();
         ApiKeyRotatedEvent event = new ApiKeyRotatedEvent(deviceId, UUID.randomUUID(), "revoked-hash", UUID.randomUUID(), Instant.now());
 
-        deviceRegistryEventPublisherAdapter.publishApiKeyRotated(event);
+        deviceRegistryEventKafkaPublisher.send(deviceId.toString(), event).join();
 
         ConsumerRecord<String, String> record = consumeOneRecord();
 
@@ -60,12 +60,12 @@ class DeviceRegistryEventPublisherAdapterIT {
     }
 
     @Test
-    void shouldPublishMembershipChangedEventToTopicWithDeviceIdAsKey() {
+    void shouldSendMembershipChangedEventToTopicWithDeviceIdAsKey() {
         UUID deviceId = UUID.randomUUID();
         UUID groupId = UUID.randomUUID();
         DeviceGroupMembershipChangedEvent event = new DeviceGroupMembershipChangedEvent(deviceId, groupId, MembershipChangeType.ADDED, Instant.now());
 
-        deviceRegistryEventPublisherAdapter.publishMembershipChanged(event);
+        deviceRegistryEventKafkaPublisher.send(deviceId.toString(), event).join();
 
         ConsumerRecord<String, String> record = consumeOneRecord();
 

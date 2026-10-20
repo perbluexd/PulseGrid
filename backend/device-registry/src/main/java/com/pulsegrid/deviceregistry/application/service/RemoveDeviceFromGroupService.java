@@ -9,6 +9,7 @@ import com.pulsegrid.deviceregistry.application.port.out.DeviceGroupMembershipRe
 import com.pulsegrid.deviceregistry.application.port.out.DeviceRegistryEventPublisherPort;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
@@ -19,6 +20,7 @@ public class RemoveDeviceFromGroupService implements RemoveDeviceFromGroupUseCas
     private final DeviceRegistryEventPublisherPort deviceRegistryEventPublisherPort;
 
     @Override
+    @Transactional
     public void remove(RemoveDeviceFromGroupCommand command) {
         if (!deviceGroupMembershipRepositoryPort.existsByDeviceIdAndGroupId(command.deviceId(), command.groupId())) {
             throw new DeviceNotInGroupException();

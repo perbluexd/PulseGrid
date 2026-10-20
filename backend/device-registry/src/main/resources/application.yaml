@@ -41,3 +41,8 @@ app:
     service-token: ${INTERNAL_SERVICE_TOKEN:dev-only-internal-placeholder-never-use-in-production}
   kafka:
     device-registry-events-topic: device-registry-events
+  outbox:
+    relay-interval: 2s
+    batch-size: 100
+    purge-cron: "0 0 3 * * *"
+    sent-retention: 7d

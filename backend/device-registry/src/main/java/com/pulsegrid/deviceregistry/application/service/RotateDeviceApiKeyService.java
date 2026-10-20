@@ -14,6 +14,7 @@ import com.pulsegrid.deviceregistry.domain.model.ApiKey;
 import com.pulsegrid.deviceregistry.domain.model.ApiKeyStatus;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -27,6 +28,7 @@ public class RotateDeviceApiKeyService implements RotateDeviceApiKeyUseCase {
     private final DeviceRegistryEventPublisherPort deviceRegistryEventPublisherPort;
 
     @Override
+    @Transactional
     public RotateDeviceApiKeyResult rotate(RotateDeviceApiKeyCommand command) {
         deviceRepositoryPort.findById(command.deviceId())
                 .orElseThrow(() -> new DeviceNotFoundException(command.deviceId().toString()));
