@@ -41,3 +41,8 @@ spec:
                 secretKeyRef:
                   name: device-registry-secret
                   key: SPRING_DATASOURCE_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: device-registry-secret
+                  key: JWT_SECRET
