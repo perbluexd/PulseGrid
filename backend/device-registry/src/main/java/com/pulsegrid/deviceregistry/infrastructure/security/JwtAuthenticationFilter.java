@@ -1,6 +1,7 @@
 package com.pulsegrid.deviceregistry.infrastructure.security;
 
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,10 +23,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private final JwtKeyProvider jwtKeyProvider;
+    private final JwtParser jwtParser;
 
     public JwtAuthenticationFilter(JwtKeyProvider jwtKeyProvider) {
-        this.jwtKeyProvider = jwtKeyProvider;
+        this.jwtParser = Jwts.parser()
+                .verifyWith(jwtKeyProvider.getKey())
+                .build();
     }
 
     @Override
@@ -37,11 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith(BEARER_PREFIX)) {
             String token = header.substring(BEARER_PREFIX.length());
             try {
-                var claims = Jwts.parser()// var es igual Claims
-                        .verifyWith(jwtKeyProvider.getKey())
-                        .build()
-                        .parseSignedClaims(token)
-                        .getPayload();
+                var claims = jwtParser.parseSignedClaims(token).getPayload();// var es igual Claims
 
                 String userId = claims.getSubject();
                 String role = claims.get("role", String.class);
