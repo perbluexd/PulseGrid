@@ -46,3 +46,8 @@ spec:
                 secretKeyRef:
                   name: device-registry-secret
                   key: JWT_SECRET
+            - name: INTERNAL_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: device-registry-secret
+                  key: INTERNAL_SERVICE_TOKEN
